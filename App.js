@@ -5,14 +5,16 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { theme } from './colors';
 import { MaterialCommunityIcons } from '@expo/vector-icons'; 
 
-const STORAGE_KEY = "@toDoList"
+const STORAGE_TODOLIST = "@toDoList"
+const STORAGE_WORKING = "@workingState"
 
 export default function App() {
-  const [working, setWorking] = useState(true);
+  const [config, setConfig] = useState({});
   const [toDo, setTodo] = useState("");
   const [toDoList, setTodoList] = useState({});
 
   useEffect(() => {
+    loadWorkingState();
     loadToDos();
   }, []);
 
@@ -23,7 +25,7 @@ export default function App() {
       ...toDoList,
       [Date.now()]: {
         toDo,
-        working,
+        working: config.working,
       },
     };
 
@@ -47,21 +49,35 @@ export default function App() {
       },
     ]);
   };
-  const loadToDos = async() => {
-    const toDoList = await AsyncStorage.getItem(STORAGE_KEY);
+  const loadToDos = async () => {
+    const toDoList = await AsyncStorage.getItem(STORAGE_TODOLIST);
     setTodoList(JSON.parse(toDoList));
   };
+  const loadWorkingState = async () => {
+    const existingWorking = await AsyncStorage.getItem(STORAGE_WORKING);
+    const working = typeof existingWorking === "string" ? JSON.parse(existingWorking).working : true
+    setConfig({ ...config, working });
+  };
   const onChangeText = (payload) => setTodo(payload);
-  const saveTodos = async (payload) => await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+  const saveTodos = async (payload) => await AsyncStorage.setItem(STORAGE_TODOLIST, JSON.stringify(payload));
+  const saveWorkingState = async (payload) => await AsyncStorage.setItem(STORAGE_WORKING, JSON.stringify(payload));
   const selectedThemeColor = (btn) => {
-    if (working && btn !== 'work' || !working && btn === 'work') {
+    if (config.working && btn !== 'work' || !config.working && btn === 'work') {
       return { color: theme.grey };
     }
     return { color: theme.white };
   };
 
-  const travel = () => setWorking(false);
-  const work = () => setWorking(true);
+  const travel = () => {
+    const newConfig = { ...config, working: false };
+    setConfig(newConfig);
+    saveWorkingState(newConfig);
+  }
+  const work = () => {
+    const newConfig = { ...config, working: true };
+    setConfig(newConfig);
+    saveWorkingState(newConfig);
+  }
   return (
     <View style={styles.container}>
       <StatusBar style="auto" />
@@ -77,14 +93,14 @@ export default function App() {
         <TextInput
           onChangeText={onChangeText}
           onSubmitEditing={addTodo}
-          placeholder={working ? "Add a work" : "Where do you want to go?"}
+          placeholder={config.working ? "Add a work" : "Where do you want to go?"}
           returnKeyType="done"
           style={styles.input}
           value={toDo}
         />
         <ScrollView>
           {Object.keys(toDoList).map(toDoKey => (
-            toDoList[toDoKey].working === working ? (
+            toDoList[toDoKey].working === config.working ? (
               <View style={styles.toDo} key={toDoKey}>
                 <Text style={styles.toDoText}>
                   {toDoList[toDoKey].toDo}
