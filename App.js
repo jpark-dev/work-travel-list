@@ -17,7 +17,7 @@ export default function App() {
       ...toDoList,
       [Date.now()]: {
         toDo,
-        work: working,
+        working,
       },
     };
 
@@ -53,11 +53,13 @@ export default function App() {
         />
         <ScrollView>
           {Object.keys(toDoList).map(toDoKey => (
-            <View style={styles.toDo} key={toDoKey}>
-              <Text style={styles.toDoText}>
-                {toDoList[toDoKey].toDo}
-              </Text>
-            </View>
+            toDoList[toDoKey].working === working ? (
+              <View style={styles.toDo} key={toDoKey}>
+                <Text style={styles.toDoText}>
+                  {toDoList[toDoKey].toDo}
+                </Text>
+              </View>
+            ) : null
           ))}
         </ScrollView>
       </View>
