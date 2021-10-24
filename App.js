@@ -1,8 +1,9 @@
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, TextInput, ScrollView } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, TextInput, ScrollView, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { theme } from './colors';
+import { MaterialCommunityIcons } from '@expo/vector-icons'; 
 
 const STORAGE_KEY = "@toDoList"
 
@@ -29,6 +30,22 @@ export default function App() {
     setTodoList(newTodoList);
     await saveTodos(newTodoList);
     setTodo("");
+  };
+  const deleteTodo = (key) => {
+    Alert.alert("Delete a Todo", "Are you sure?", [
+      {
+        text: "Cancel"
+      },
+      {
+        text: "Proceed",
+        onPress : () => {
+          const newTodoList = { ...toDoList };
+          delete newTodoList[key];
+          setTodoList(newTodoList);
+          saveTodos(newTodoList);
+        },
+      },
+    ]);
   };
   const loadToDos = async() => {
     const toDoList = await AsyncStorage.getItem(STORAGE_KEY);
@@ -72,6 +89,9 @@ export default function App() {
                 <Text style={styles.toDoText}>
                   {toDoList[toDoKey].toDo}
                 </Text>
+                <TouchableOpacity onPress={() => deleteTodo(toDoKey)}>
+                  <MaterialCommunityIcons name="close-circle" size={24} color="red" />
+                </TouchableOpacity>
               </View>
             ) : null
           ))}
@@ -111,6 +131,9 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 40,
     borderRadius: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
   },
   toDoText: {
     color: theme.white,
