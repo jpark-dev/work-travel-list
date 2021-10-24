@@ -1,16 +1,21 @@
 import { StatusBar } from 'expo-status-bar';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, TextInput, ScrollView } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { theme } from './colors';
+
+const STORAGE_KEY = "@toDoList"
 
 export default function App() {
   const [working, setWorking] = useState(true);
   const [toDo, setTodo] = useState("");
   const [toDoList, setTodoList] = useState({});
-  const travel = () => setWorking(false);
-  const work = () => setWorking(true);
 
-  const addTodo = () => {
+  useEffect(() => {
+    loadToDos();
+  }, []);
+
+  const addTodo = async () => {
     if (!toDo) return;
 
     const newTodoList = {
@@ -22,15 +27,24 @@ export default function App() {
     };
 
     setTodoList(newTodoList);
+    await saveTodos(newTodoList);
     setTodo("");
   };
+  const loadToDos = async() => {
+    const toDoList = await AsyncStorage.getItem(STORAGE_KEY);
+    setTodoList(JSON.parse(toDoList));
+  };
   const onChangeText = (payload) => setTodo(payload);
+  const saveTodos = async (payload) => await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
   const selectedThemeColor = (btn) => {
     if (working && btn !== 'work' || !working && btn === 'work') {
       return { color: theme.grey };
     }
     return { color: theme.white };
   };
+
+  const travel = () => setWorking(false);
+  const work = () => setWorking(true);
   return (
     <View style={styles.container}>
       <StatusBar style="auto" />
