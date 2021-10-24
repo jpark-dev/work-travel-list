@@ -15,7 +15,7 @@ export default function App() {
 
   useEffect(() => {
     loadWorkingState();
-    loadToDos();
+    loadTodos();
   }, []);
 
   const addTodo = async () => {
@@ -24,6 +24,7 @@ export default function App() {
     const newTodoList = {
       ...toDoList,
       [Date.now()]: {
+        complete: false,
         toDo,
         working: config.working,
       },
@@ -32,6 +33,13 @@ export default function App() {
     setTodoList(newTodoList);
     await saveTodos(newTodoList);
     setTodo("");
+  };
+  const completeTodo = (key) => {
+    const newTodoList = { ...toDoList };
+    newTodoList[key].complete = !newTodoList[key].complete;
+    setTodoList(newTodoList);
+    saveTodos(newTodoList);
+
   };
   const deleteTodo = (key) => {
     Alert.alert("Delete a Todo", "Are you sure?", [
@@ -49,7 +57,7 @@ export default function App() {
       },
     ]);
   };
-  const loadToDos = async () => {
+  const loadTodos = async () => {
     const toDoList = await AsyncStorage.getItem(STORAGE_TODOLIST);
     setTodoList(JSON.parse(toDoList));
   };
@@ -102,12 +110,24 @@ export default function App() {
           {Object.keys(toDoList).map(toDoKey => (
             toDoList[toDoKey].working === config.working ? (
               <View style={styles.toDo} key={toDoKey}>
-                <Text style={styles.toDoText}>
+                <Text style={[styles.toDoText, toDoList[toDoKey].complete && styles.toDoTextComplete]}>
                   {toDoList[toDoKey].toDo}
                 </Text>
-                <TouchableOpacity onPress={() => deleteTodo(toDoKey)}>
-                  <MaterialCommunityIcons name="close-circle" size={24} color="red" />
-                </TouchableOpacity>
+                <View style={styles.toDoInteraction}>
+                  <TouchableOpacity onPress={() => completeTodo(toDoKey)}>
+                    <MaterialCommunityIcons
+                      name={toDoList[toDoKey].complete ? "reload" : "checkbox-marked-circle"}
+                      size={24}
+                      color="green"
+                    />
+                  </TouchableOpacity>
+                  <TouchableOpacity onPress={() => editTodo(toDoKey)}>
+                    <MaterialCommunityIcons name="circle-edit-outline" size={24} color="orange" />
+                  </TouchableOpacity>
+                  <TouchableOpacity onPress={() => deleteTodo(toDoKey)}>
+                    <MaterialCommunityIcons name="close-circle" size={24} color="red" />
+                  </TouchableOpacity>
+                </View>
               </View>
             ) : null
           ))}
@@ -145,15 +165,22 @@ const styles = StyleSheet.create({
     backgroundColor: theme.grey,
     marginBottom: 10,
     paddingVertical: 10,
-    paddingHorizontal: 40,
+    paddingHorizontal: 20,
     borderRadius: 10,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
   },
+  toDoInteraction: {
+    flexDirection: "row",
+  },
   toDoText: {
     color: theme.white,
     fontSize: 16,
     fontWeight: "500",
+  },
+  toDoTextComplete: {
+    textDecorationLine: 'line-through',
+    color: "darkgrey",
   },
 });
