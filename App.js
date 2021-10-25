@@ -1,6 +1,6 @@
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, TextInput, ScrollView, Alert, Modal, Dimensions } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, TextInput, ScrollView, Alert, Modal, Dimensions, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { theme } from './colors';
 import { MaterialCommunityIcons } from '@expo/vector-icons'; 
@@ -51,24 +51,32 @@ export default function App() {
 
   };
   const deleteTodo = (key) => {
-    Alert.alert("Delete a Todo", "Are you sure?", [
-      {
-        text: "Cancel"
-      },
-      {
-        text: "Proceed",
-        onPress : () => {
-          const newTodoList = { ...toDoList };
-          delete newTodoList[key];
-          setTodoList(newTodoList);
-          saveTodos(newTodoList);
+    if (Platform.OS === "web") {
+      const input = confirm(`Are you sure to delete this todo: ${toDoList[key].toDo}?`);
+      if (input) {
+        const newTodoList = { ...toDoList };
+        delete newTodoList[key];
+        setTodoList(newTodoList);
+        saveTodos(newTodoList);
+      }
+    } else {
+      Alert.alert("Delete a Todo", "Are you sure?", [
+        { text: "Cancel" },
+        {
+          text: "Proceed",
+          onPress : () => {
+            const newTodoList = { ...toDoList };
+            delete newTodoList[key];
+            setTodoList(newTodoList);
+            saveTodos(newTodoList);
+          },
         },
-      },
-    ]);
+      ]);
+    }
   };
   const loadTodos = async () => {
     const toDoList = await AsyncStorage.getItem(STORAGE_TODOLIST);
-    setTodoList(JSON.parse(toDoList));
+    if (toDoList) setTodoList(JSON.parse(toDoList));
   };
   const loadWorkingState = async () => {
     const existingWorking = await AsyncStorage.getItem(STORAGE_WORKING);
