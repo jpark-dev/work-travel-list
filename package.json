@@ -22,5 +22,6 @@
   "devDependencies": {
     "@babel/core": "^7.12.9"
   },
+  "homepage": "http://jpark-dev.github.io/work-travel-list",
   "private": true
 }
