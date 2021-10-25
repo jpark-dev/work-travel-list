@@ -1,15 +1,20 @@
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, TextInput, ScrollView, Alert } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, TextInput, ScrollView, Alert, Modal, Dimensions } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { theme } from './colors';
 import { MaterialCommunityIcons } from '@expo/vector-icons'; 
 
+const SCREEN_HEIGHT = Dimensions.get('window').height;
+const SCREEN_WIDTH = Dimensions.get('window').width;
 const STORAGE_TODOLIST = "@toDoList"
 const STORAGE_WORKING = "@workingState"
 
 export default function App() {
   const [config, setConfig] = useState({});
+  const [editModal, setEditModal] = useState(false);
+  const [targetTodoText, onChangeTodoText] = useState("");
+  const [targetTodoKey, setTargetTodoKey] = useState("");
   const [toDo, setTodo] = useState("");
   const [toDoList, setTodoList] = useState({});
 
@@ -33,6 +38,10 @@ export default function App() {
     setTodoList(newTodoList);
     await saveTodos(newTodoList);
     setTodo("");
+  };
+  const closeEditModal = () => {
+    setEditModal(!editModal);
+    setTargetTodoKey("");
   };
   const completeTodo = (key) => {
     const newTodoList = { ...toDoList };
@@ -75,7 +84,13 @@ export default function App() {
     }
     return { color: theme.white };
   };
-
+  const updateTodo = () => {
+    const newTodoList = { ...toDoList };
+    newTodoList[targetTodoKey].toDo = targetTodoText;
+    setTodoList(newTodoList);
+    saveTodos(newTodoList);
+    closeEditModal();
+  };
   const travel = () => {
     const newConfig = { ...config, working: false };
     setConfig(newConfig);
@@ -121,7 +136,10 @@ export default function App() {
                       color="green"
                     />
                   </TouchableOpacity>
-                  <TouchableOpacity onPress={() => editTodo(toDoKey)}>
+                  <TouchableOpacity onPress={() => {
+                    setEditModal(!editModal);
+                    setTargetTodoKey(toDoKey);
+                  }}>
                     <MaterialCommunityIcons name="circle-edit-outline" size={24} color="orange" />
                   </TouchableOpacity>
                   <TouchableOpacity onPress={() => deleteTodo(toDoKey)}>
@@ -133,20 +151,93 @@ export default function App() {
           ))}
         </ScrollView>
       </View>
+      <Modal
+        animationType="fade"
+        onRequestClose={closeEditModal}
+        transparent={true}
+        visible={editModal}
+      >
+        <View style={styles.centeredContainer}>
+          <View style={styles.editModalContainer}>
+            <Text>Edit Todo: {toDoList[targetTodoKey]?.toDo || ""}</Text>
+            <TextInput
+              onChangeText={onChangeTodoText}
+              placeholder="Please enter your new todo:"
+              style={styles.editModalInput}
+              value={targetTodoText}
+            >
+            </TextInput>
+            <View style={styles.editBtnContainer}>
+              <TouchableOpacity onPress={updateTodo}>
+                <Text style={[styles.editModalBtn, styles.btnConfirm]}>Update</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={closeEditModal}>
+                <Text style={[styles.editModalBtn, styles.btnCancel]}>Cancel</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  btnConfirm: {
+    backgroundColor: theme.confirm,
+  },
+  btnCancel: {
+    backgroundColor: theme.cancel,
+  },
   btnTxt: {
     color: "white",
     fontSize: 35,
     fontWeight: "600",
   },
+  centeredContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 22,
+  },
   container: {
     flex: 1,
     backgroundColor: theme.bg,
     paddingHorizontal: 20,
+  },
+  editBtnContainer: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    width: "100%",
+    flex: 1,
+  },
+  editModalBtn: {
+    marginLeft: 10,
+    padding: 15,
+    borderRadius: 15,
+    elevation: 4,
+  },
+  editModalContainer: {
+    margin: 20,
+    backgroundColor: theme.white,
+    borderRadius: 15,
+    padding: 10,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+    width: SCREEN_WIDTH * 0.8,
+    minHeight: SCREEN_HEIGHT * 0.3,
+  },
+  editModalInput: {
+    textAlign: "center",
+    width: "100%",
+    flex: 2,
   },
   header: {
     flexDirection: 'row',
