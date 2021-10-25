@@ -23,7 +23,8 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#0000000"
-      }
+      },
+      "package": "com.zeipar.WorkTravel"
     },
     "web": {
       "favicon": "./assets/favicon.png"
